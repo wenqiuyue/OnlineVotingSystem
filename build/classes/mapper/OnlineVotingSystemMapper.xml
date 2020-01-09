@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dao.OnlineVotingDao">
+	<!-- 根据用户的id或姓名和密码查找用户是否存在 -->
+	<select id="getUserByNameORIDAndpass" parameterType="entity.User" resultType="entity.User">
+		select * from userinfo where uname=#{uname} and password=#{password}<!-- count(1)判断用户是否存在 -->
+	</select>
+	<!-- 添加用户 -->
+	<insert id="addUser" parameterType="entity.User">
+		insert into userinfo(uname,password,category) values(#{uname},#{password},#{category})
+	</insert>
+	<!-- 查询该类别所有用户 -->
+	<select id="getAllActivityAdministrator" parameterType="int" resultType="entity.User">
+		select * from userinfo where category=#{category}
+	</select>
+	<!-- 删除用户 -->
+	<delete id="systemAdministratorDelUser" parameterType="String">
+		delete from userinfo where uname=#{uname}
+	</delete>
+	<select id="getUserByName" parameterType="String" resultType="int">
+		select count(1) from userinfo where uname=#{uname}<!-- count(1)判断用户是否存在 -->
+	</select>
+	<!--添加选手-->
+	<insert id="addPlayer" parameterType="entity.Player">
+		insert into player(number,pname,psex,phone,email,address,photos) values(#{number},#{pname},#{psex},#{phone},#{email},#{address},#{photos})
+	</insert>
+	<select id="getPlayerById" parameterType="String" resultType="int">
+		select count(1) from player where number=#{number}<!-- count(1)判断选手编号否存在 -->
+	</select>
+	<!-- 查询所有选手 -->
+	<select id="getAllPlayer" resultType="entity.Player">
+		select * from player
+	</select>
+	<!-- 根据选手编号删除选手 -->
+	<delete id="delPlayerByNumber" parameterType="String">
+		delete from player where number=#{number}
+	</delete>
+	<!-- 根据选手编号查询选手 -->
+	<select id="getPlayerByNumber" parameterType="String" resultType="entity.Player">
+		select * from player where number=#{number}
+	</select>
+	<!-- 修改选手信息 -->
+	<update id="updatePlayerByNumber" parameterType="entity.Player">
+		update player set pname=#{pname},phone=#{phone},email=#{email},address=#{address} where number=#{number}
+	</update>
+	<!-- 添加比赛场次 -->
+	<insert id="addMatch" parameterType="entity.Match">
+		insert into matchnumber(number,player_a_num,player_a_program,player_b_num,player_b_program) values(#{number},#{player_a_num},#{player_a_program},#{player_b_num},#{player_b_program})
+	</insert>
+	<!-- 查询所有比赛场次 -->
+	<select id="getAllMatch" resultType="entity.Match">
+		select * from matchnumber
+	</select>
+	<!-- 根据比赛场次删除该比赛 -->
+	<delete id="delMatchByNumber" parameterType="int">
+		delete from matchnumber where number=#{number}
+	</delete>
+	<!-- 查询有效投票 -->
+	<select id="getAllVotes" resultType="entity.votes">
+		select * from votes
+	</select>
+	<!-- 修改有效票数 -->
+	<update id="updateVotes" parameterType="entity.votes">
+		update votes set votesnum=#{votesnum} where usercategory=#{usercategory}
+	</update>
+	<!-- 根据用户类别查询有效投票 -->
+	<select id="getVotesNumByCategory" parameterType="entity.votes" resultType="entity.votes">
+		select * from votes where usercategory=#{usercategory}
+	</select>
+	<!-- 更改比赛是否启动 -->
+	<update id="updateIsBegin" parameterType="entity.Match">
+		update matchnumber set isbegin=#{isbegin} where number=#{number}
+	</update>
+	<!-- 获取已经启动的比赛 -->
+	<select id="getBeginMatch" parameterType="int" resultType="entity.Match">
+		select * from matchnumber where isbegin=#{isbegin}
+	</select>
+	<resultMap type="entity.Match" id="match">
+		<id property="number" column="number"/>
+		<result property="player_a_num" column="player_a_num"/>
+		<result property="player_a_program" column="player_a_program"/>
+		<result property="player_a_votes" column="player_a_votes"/>
+		<result property="player_b_num" column="player_b_num"/>
+		<result property="player_b_program" column="player_b_program"/>
+		<result property="player_b_votes" column="player_b_votes"/>
+		<result property="winp" column="winp"/>
+		<result property="isbegin" column="isbegin"/>
+		<association property="player" javaType="entity.Player">
+			<id property="number" column="number"/>
+			<result property="pname" column="pname"/>
+			<result property="psex" column="psex"/>
+			<result property="phone" column="phone"/>
+			<result property="email" column="email"/>
+			<result property="address" column="address"/>
+			<result property="photos" column="photos"/>
+		</association>
+	</resultMap>
+	
+	<!-- 获取比赛选手a的信息 -->
+	<select id="getPlayerAInfo" resultMap="match">
+		select * from matchnumber join player on matchnumber.player_a_num=player.number where matchnumber.isbegin=1
+	</select>
+	<!-- 获取比赛选手b的信息 -->
+	<select id="getPlayerB" resultMap="match">
+		select * from matchnumber join player on matchnumber.player_b_num=player.number where matchnumber.isbegin=1
+	</select>
+	
+	<!-- 将被投票的选手编号加入到数据库 -->
+	<insert id="addVotePlayer" parameterType="entity.PlayerVotes">
+		insert into playervotes(playernumber,matchnumber) values(#{playernumber},#{matchnumber})
+	</insert>
+	<!-- 删除某场比赛投票数 -->
+	<delete id="delVotesByMatchNumber" parameterType="int">
+		delete from playervotes where matchnumber=#{matchnumber}
+	</delete>
+	
+	<!-- 获取选手的票数 -->
+	<select id="getPlayerVotesByPlayernumber" parameterType="String" resultType="int">
+		select count(*) from playervotes where playernumber=#{playernumber}
+	</select>
+</mapper>
